@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAELSTRÖM v6.1 — Téléchargeur universel</title>
+<meta name="description" content="MAELSTRÖM : téléchargeur universel gratuit et open source, compatible avec plus de 1 700 sites. Windows et Linux, macOS bientôt.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#140E0B">
+
+<!-- Aperçu de lien (Open Graph / réseaux sociaux) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="MAELSTRÖM">
+<meta property="og:title" content="MAELSTRÖM v6.1 — Téléchargeur universel">
+<meta property="og:description" content="Gratuit et open source. Plus de 1 700 sites compatibles. Windows et Linux, macOS bientôt.">
+<!-- <meta property="og:image" content="https://VOTRE-SITE.netlify.app/og.png"> (image 1200×630 conseillée) -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MAELSTRÖM v6.1 — Téléchargeur universel">
+<meta name="twitter:description" content="Gratuit et open source. Plus de 1 700 sites compatibles.">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23140E0B'/%3E%3Ctext x='32' y='46' font-family='monospace' font-size='38' font-weight='bold' fill='%23F4A867' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+
+<style>
+/* Palette d'origine (TUI) : fond #140E0B, ambre #F4A867, or #FFCE80, corail #E8806A, sauge #9CCB8E */
+:root{
+  --bg:#140E0B;
+  --bg-2:#1A1310;
+  --panel:#191210;
+  --panel-2:#1F1613;
+  --line:#2A1D16;
+  --line-2:#3A2A20;
+  --line-dim:#2A1D16;
+  --text:#E9DACA;
+  --txt:#E9DACA;
+  --hi:#FBF1E4;
+  --muted:#A8917F;
+  --dim:#7A6456;
+  --faint:#7A6456;
+  --amber:#F4A867;
+  --gold:#FFCE80;
+  --coral:#E8806A;
+  --rose:#D9708C;
+  --green:#9CCB8E;
+  --sage:#9CCB8E;
+  --red:#F07A6A;
+  --err:#F07A6A;
+  --acc-soft:rgba(244,168,103,.13);
+  --acc-glow:rgba(244,168,103,.20);
+  --grad:linear-gradient(100deg,#FFCE80 0%,#F4A867 35%,#E8806A 70%,#D9708C 100%);
+  --font:"JetBrains Mono","Cascadia Code","Fira Code",ui-monospace,"SF Mono","Segoe UI Mono",Consolas,"DejaVu Sans Mono",monospace;
+  --radius:14px;
+  --header-h:64px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(900px 520px at 12% -12%, rgba(244,168,103,.15), transparent 65%),
+    radial-gradient(760px 520px at 105% 8%, rgba(217,112,140,.10), transparent 60%),
+    radial-gradient(900px 600px at 50% 118%, rgba(232,128,106,.09), transparent 60%),
+    var(--bg);
+  min-height:100vh;display:flex;flex-direction:column;
+}
+body.modal-lock{overflow:hidden}
+a{color:var(--amber);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:inherit;font-size:inherit;color:inherit}
+::selection{background:rgba(244,168,103,.30);color:#FFF3E2}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:6px}
+.grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#3A2A20;border-radius:99px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:#54402F}
+
+/* Grain très discret (d'origine) */
+.crt{
+  position:fixed;inset:0;pointer-events:none;z-index:60;
+  background:repeating-linear-gradient(0deg,rgba(255,235,214,.012) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+.crt::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(120% 90% at 50% 40%,transparent 60%,rgba(5,2,1,.5) 100%);
+}
+
+/* ---------- Header (style d'origine, M ASCII réparé) ---------- */
+.site-header{
+  position:sticky;top:0;z-index:50;height:var(--header-h);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 clamp(16px,4vw,40px);
+  background:rgba(20,14,11,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-dim);
+}
+.brand{display:flex;align-items:center;gap:12px;color:var(--hi);font-weight:700;white-space:nowrap}
+.brand:hover{text-decoration:none}
+.brand .glyph{
+  margin:0;font-family:var(--font);font-size:6px;line-height:1;white-space:pre;font-weight:700;
+  color:var(--amber);text-shadow:0 0 12px var(--acc-glow);user-select:none;
+}
+.brand .word{display:flex;flex-direction:column;gap:2px}
+.brand .word b{font-size:14px;letter-spacing:.22em}
+.brand .word small{font-weight:400;font-size:9.5px;color:var(--faint);letter-spacing:.28em}
+.nav{display:flex;align-items:center;gap:6px}
+.nav a{
+  color:var(--muted);font-size:11.5px;letter-spacing:.18em;
+  padding:8px 12px;border:1px solid transparent;border-radius:4px;
+  transition:color .18s,border-color .18s,background .18s;
+}
+.nav a:hover{color:var(--text);background:var(--acc-soft);text-decoration:none}
+.nav a.active{
+  color:var(--amber);border-color:var(--line-2);
+  background:linear-gradient(180deg,rgba(244,168,103,.10),rgba(244,168,103,.03));
+  box-shadow:0 0 18px rgba(244,168,103,.07) inset;
+}
+.nav a .idx{color:var(--faint);margin-right:6px;font-size:10px}
+.nav a.active .idx{color:var(--amber);opacity:.7}
+
+/* ---------- Layout ---------- */
+main{flex:1;width:100%}
+.view{display:none;animation:viewIn .35s var(--ease)}
+.view.active{display:block}
+@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.section{padding:clamp(30px,5vw,56px) 0}
+.kicker{font-size:12px;letter-spacing:.22em;color:var(--amber);text-transform:uppercase;margin:0 0 10px}
+h1,h2,h3{line-height:1.2;margin:0 0 14px}
+h2{font-size:clamp(22px,3vw,30px)}
+h3{font-size:17px}
+p{margin:0 0 14px}
+.muted{color:var(--muted)}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:13px 22px;border-radius:12px;border:1px solid var(--line-2);
+  background:var(--panel);color:var(--text);cursor:pointer;font-weight:600;letter-spacing:.04em;
+  transition:transform .2s var(--ease),border-color .2s,background .2s,box-shadow .2s;
+  text-decoration:none;white-space:nowrap;
+}
+.btn:hover{border-color:var(--amber);transform:translateY(-1px);text-decoration:none}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn-primary{
+  background:var(--grad);color:#2B150D;border:none;
+  box-shadow:0 10px 30px -10px rgba(232,128,106,.6);
+}
+.btn-primary:hover{box-shadow:0 14px 36px -10px rgba(232,128,106,.8)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;transform:none;border-color:var(--line-2)}
+.badge{
+  display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  padding:3px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);background:var(--bg-2)
+}
+.badge-rec{color:#2B150D;background:var(--grad);border:none}
+.badge-soon{color:var(--gold);border-color:rgba(255,206,128,.35);background:rgba(255,206,128,.06)}
+
+/* ---------- Accueil (version d'origine) ---------- */
+.hero{padding:clamp(36px,6vw,72px) 0 clamp(24px,4vw,40px);text-align:center}
+.art{
+  display:inline-block;margin:0 auto;font-size:clamp(5px,1.08vw,13px);line-height:1.08;
+  white-space:pre;font-weight:700;text-align:left;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(232,128,106,.15));user-select:none;
+}
+.art-mini{display:none;font-size:clamp(22px,7vw,40px);font-weight:800;letter-spacing:.32em;text-indent:.32em;padding:14px 0 6px;margin:0}
+.tagline{color:var(--muted);font-size:clamp(12px,2.2vw,14.5px);letter-spacing:.14em;max-width:820px;margin:18px auto 0}
+.tagline b{color:var(--hi);font-weight:600}
+.tagline .v6{color:var(--gold)}
+
+/* Aperçu du menu TUI */
+.tui{
+  max-width:700px;margin:30px auto 0;text-align:left;
+  border:1px solid var(--line-2);border-radius:10px;
+  background:linear-gradient(180deg,#171009,#120C09);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,214,176,.06);
+  overflow:hidden;
+}
+.tui-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;background:rgba(255,214,176,.04);
+  border-bottom:1px solid var(--line-dim);
+  color:var(--faint);font-size:10.5px;letter-spacing:.16em;
+}
+.tui-bar .dots{display:flex;gap:5px}
+.tui-bar .dots i{width:9px;height:9px;border-radius:99px;background:var(--line-2)}
+.tui-bar .dots i:first-child{background:var(--coral)}
+.tui-bar .dots i:nth-child(2){background:var(--gold)}
+.tui-bar .dots i:last-child{background:var(--sage)}
+.tui-bar .ttl{margin:0 auto}
+.tui-body{padding:16px 20px 18px;font-size:12.5px;line-height:1.75;overflow-x:auto;white-space:pre;color:var(--text)}
+.tui-body .m{color:var(--faint)}
+.tui-body .a{color:var(--amber)}
+.tui-body .h{color:var(--hi)}
+.tui-body .d{color:var(--muted)}
+.tui-body .rule{color:var(--faint)}
+.tui-body .sel{
+  display:inline-block;padding:1px 10px;margin:2px 0;
+  background:rgba(50,33,27,.9);border-left:2px solid var(--amber);color:var(--hi);
+}
+.tui-hint{color:var(--faint);font-size:10.5px;letter-spacing:.14em;margin:10px 0 0}
+
+/* Boot log */
+.boot{
+  max-width:640px;margin:26px auto 0;text-align:left;
+  border:1px solid var(--line-dim);border-radius:8px;
+  background:linear-gradient(180deg,rgba(25,18,16,.9),rgba(18,12,9,.9));
+  padding:14px 18px;font-size:12.5px;color:var(--muted);
+  box-shadow:0 14px 40px rgba(0,0,0,.45);min-height:52px;
+}
+.boot .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boot .ln .p{color:var(--amber)}
+.boot .ln .ok{color:var(--sage)}
+.boot .ln .v{color:var(--txt)}
+.cursor{
+  display:inline-block;width:.62em;height:1.05em;
+  background:var(--amber);vertical-align:-0.18em;margin-left:2px;
+  animation:blink 1.05s steps(1) infinite;box-shadow:0 0 10px var(--acc-glow);
+}
+@keyframes blink{50%{opacity:0}}
+
+/* Rangée de boutons */
+.cta-row{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
+.cta-row .btn{
+  border-radius:8px;font-size:12.5px;letter-spacing:.14em;font-weight:700;
+  border:1px solid var(--line-2);color:var(--txt);
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+}
+.cta-row .btn:hover{border-color:#54402F;box-shadow:0 10px 26px rgba(0,0,0,.5)}
+.cta-row .btn-primary{
+  border-color:rgba(244,168,103,.55);background:var(--grad);color:#2B150D;
+  box-shadow:0 8px 26px -10px rgba(232,128,106,.7),inset 0 1px 0 rgba(255,255,255,.30);
+}
+.cta-row .btn-primary:hover{border-color:rgba(244,168,103,.85);box-shadow:0 10px 32px -10px rgba(232,128,106,.85)}
+.cta-row .btn .arr{font-weight:400;transition:transform .16s}
+.cta-row .btn:hover .arr{transform:translateX(3px)}
+
+/* Vérification rapide */
+.quick{
+  max-width:640px;margin:34px auto 0;text-align:left;
+  display:flex;border:1px solid var(--line-2);border-radius:10px;
+  background:var(--panel);overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.4);
+  transition:border-color .18s,box-shadow .18s;
+}
+.quick:focus-within{border-color:rgba(244,168,103,.6);box-shadow:0 0 0 3px rgba(244,168,103,.10),0 14px 34px rgba(0,0,0,.5)}
+.quick .prefix{padding:12px 4px 12px 16px;color:var(--faint);font-size:13px;user-select:none;white-space:nowrap}
+.quick input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--txt);font-family:inherit;font-size:14px;padding:12px 8px}
+.quick input::placeholder{color:var(--faint)}
+.quick button{
+  border:0;cursor:pointer;padding:0 20px;background:rgba(244,168,103,.14);color:var(--amber);
+  font-size:11.5px;font-weight:700;letter-spacing:.16em;transition:background .16s,color .16s;
+}
+.quick button:hover{background:rgba(244,168,103,.26);color:#FFE8CC}
+.quick-hint{color:var(--faint);font-size:11px;margin:10px 0 0;letter-spacing:.06em}
+
+/* En-têtes de section + stats */
+.sec-head{margin-bottom:26px}
+.sec-head .path{color:var(--faint);font-size:12px;letter-spacing:.08em;margin-bottom:8px;word-break:break-all}
+.sec-head .path .u{color:var(--amber)}
+.sec-head h2{font-size:clamp(18px,3.4vw,26px);font-weight:800;letter-spacing:.16em;color:var(--hi);margin:0}
+.sec-head .sub{color:var(--muted);font-size:13px;margin:8px 0 0;max-width:780px}
+.sec-head .sub b{color:var(--txt)}
+.stats{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:38px}
+.stat{
+  border:1px solid var(--line-dim);border-radius:10px;
+  background:linear-gradient(180deg,var(--panel-2),rgba(18,12,9,.6));
+  padding:18px 18px 15px;position:relative;overflow:hidden;
+}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(244,168,103,.5),transparent)}
+.stat .n{font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--hi);letter-spacing:.04em}
+.stat .n.ok{color:var(--sage)}
+.stat .n.gold{color:var(--gold)}
+.stat .l{color:var(--muted);font-size:10.5px;letter-spacing:.2em;margin-top:4px}
+
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{
+  background:linear-gradient(180deg,var(--panel-2),rgba(18,12,9,.55));border:1px solid var(--line);border-radius:var(--radius);padding:22px;
+  transition:border-color .2s,transform .2s var(--ease)
+}
+.card:hover{border-color:#54402F;transform:translateY(-2px)}
+.card svg{width:26px;height:26px;color:var(--amber);margin-bottom:10px}
+.card p{color:var(--muted);margin:0;font-size:14px}
+
+/* ---------- Capabilities ---------- */
+.cap-head{padding:44px 0 18px}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search{
+  flex:1;min-width:240px;display:flex;align-items:center;gap:10px;background:var(--panel);
+  border:1px solid var(--line-2);border-radius:12px;padding:0 14px;transition:border-color .2s,box-shadow .2s
+}
+.search:focus-within{border-color:var(--amber);box-shadow:0 0 0 4px rgba(244,168,103,.12)}
+.search svg{width:18px;height:18px;color:var(--muted);flex:none}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:15px;padding:13px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  padding:9px 14px;border-radius:999px;border:1px solid var(--line-2);background:var(--panel);
+  cursor:pointer;font-size:13px;color:var(--muted);transition:all .2s
+}
+.chip:hover{color:var(--text);border-color:var(--amber)}
+.chip.active{color:#2B150D;background:var(--grad);border-color:transparent;font-weight:700}
+.result-info{margin:14px 0 0;font-size:13px;color:var(--muted)}
+
+.reg-index{
+  position:sticky;top:var(--header-h);z-index:20;display:flex;gap:4px;flex-wrap:wrap;
+  padding:10px 0;margin-bottom:8px;background:rgba(20,14,11,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line)
+}
+.reg-index button{
+  min-width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer;
+  color:var(--muted);font-weight:700;font-size:13px;transition:all .2s
+}
+.reg-index button:hover:not(:disabled){color:var(--text);border-color:var(--line-2);background:var(--panel)}
+.reg-index button.active{color:#2B150D;background:var(--grad)}
+.reg-index button:disabled{opacity:.25;cursor:default}
+
+.reg-group{display:grid;grid-template-columns:110px 1fr;gap:24px;padding:26px 0;border-bottom:1px solid var(--line);scroll-margin-top:calc(var(--header-h) + 64px)}
+.reg-char{position:sticky;top:calc(var(--header-h) + 64px);align-self:start}
+.reg-char b{
+  display:block;font-size:52px;line-height:1;font-weight:800;
+  background:linear-gradient(180deg,#ffe3a3,#FFCE80 50%,#d99a3a);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(255,206,128,.25))
+}
+.reg-char span{font-size:12px;color:var(--muted)}
+.reg-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 18px}
+.entry{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;font-size:13.5px;min-width:0;transition:background .15s}
+.entry:hover{background:var(--panel)}
+.entry .dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--green);box-shadow:0 0 8px rgba(156,203,142,.55)}
+.entry.ko .dot{background:var(--red);box-shadow:0 0 8px rgba(240,122,106,.5)}
+.entry.ko .name{color:var(--muted)}
+.entry .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry mark{background:none;color:var(--amber);font-weight:800}
+.reg-empty{padding:50px 0;text-align:center;color:var(--muted)}
+
+.to-top{
+  position:fixed;right:22px;bottom:22px;z-index:40;width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;cursor:pointer;border:1px solid var(--line-2);background:rgba(25,18,16,.9);
+  backdrop-filter:blur(8px);color:var(--amber);opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:opacity .25s,visibility .25s,transform .25s var(--ease),border-color .2s
+}
+.to-top.show{opacity:1;visibility:visible;transform:none}
+.to-top:hover{border-color:var(--amber)}
+.to-top svg{width:20px;height:20px}
+
+/* ---------- Notice ---------- */
+.notice{max-width:860px}
+.notice h2{margin-top:6px}
+.notice section{padding:34px 0;border-bottom:1px solid var(--line)}
+.notice section:last-child{border-bottom:none}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0 0 16px}
+.steps li{counter-increment:s;position:relative;padding:0 0 14px 44px}
+.steps li::before{
+  content:counter(s);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:9px;
+  display:grid;place-items:center;font-weight:800;font-size:13px;color:#2B150D;background:var(--grad)
+}
+.dl-row{display:flex;gap:12px;flex-wrap:nowrap;margin:20px 0 22px}
+.dl-row .btn{flex:1 1 0;min-width:0}
+.dl-row .btn .lbl{overflow:hidden;text-overflow:ellipsis}
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:14px 16px;color:var(--muted);font-size:14px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+summary{cursor:pointer;padding:15px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--amber);font-weight:800;transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details .ans{padding:0 18px 16px;color:var(--muted);font-size:14px}
+
+/* ---------- Code blocks ---------- */
+.codeblock{position:relative;background:#120C09;border:1px solid var(--line-2);border-radius:10px;margin:10px 0}
+.codeblock pre{margin:0;padding:14px 92px 14px 16px;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.6;color:#f3e6d2}
+.codeblock .copy{
+  position:absolute;top:8px;right:8px;padding:6px 10px;font-size:11px;font-weight:700;letter-spacing:.1em;
+  border-radius:7px;border:1px solid var(--line-2);background:var(--panel-2);cursor:pointer;color:var(--amber);transition:all .2s
+}
+.codeblock .copy:hover{border-color:var(--amber)}
+.codeblock .copy.done{color:var(--green);border-color:var(--green)}
+.codeblock.inline pre{padding-right:92px}
+.codeblock.inline pre::before{content:"$ ";color:var(--dim)}
+
+/* ---------- 404 ---------- */
+.nf{text-align:center;padding:100px 0}
+.nf b{font-size:clamp(70px,14vw,140px);display:block;line-height:1}
+
+/* ---------- Footer ---------- */
+.site-footer{border-top:1px solid var(--line);padding:30px 0;margin-top:40px}
+.site-footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.site-footer small{color:var(--dim)}
+
+/* ---------- Modals ---------- */
+.modal{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility .3s
+}
+.modal.open{opacity:1;visibility:visible}
+.modal[hidden]{display:none}
+.modal-backdrop{position:absolute;inset:0;background:rgba(10,6,4,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.modal-panel{
+  position:relative;width:100%;max-height:calc(100vh - 40px);overflow:auto;
+  background:var(--panel);border:1px solid var(--line-2);border-radius:18px;padding:28px;
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.85);
+  transform:translateY(16px) scale(.97);transition:transform .35s var(--ease)
+}
+.modal.open .modal-panel{transform:none}
+.modal-close{
+  position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:10px;border:1px solid var(--line-2);
+  background:var(--bg-2);cursor:pointer;display:grid;place-items:center;color:var(--muted);transition:all .2s
+}
+.modal-close:hover{color:var(--text);border-color:var(--amber)}
+.modal-close svg{width:16px;height:16px}
+
+/* Bienvenue (glassmorphism chaud) */
+#welcome .modal-backdrop{background:rgba(20,10,6,.35);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2)}
+.welcome-panel{
+  max-width:440px;text-align:center;padding:40px 32px 32px;
+  background:linear-gradient(140deg,rgba(244,168,103,.16),rgba(232,128,106,.10) 55%,rgba(232,128,106,.05));
+  border:1px solid rgba(255,200,150,.28);
+  backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  box-shadow:0 30px 90px -30px rgba(232,128,106,.45),inset 0 1px 0 rgba(255,255,255,.12)
+}
+.welcome-panel h2{font-size:clamp(34px,7vw,46px);margin-bottom:12px;letter-spacing:.02em}
+.welcome-panel p{color:#e2d3c3;margin-bottom:26px}
+.welcome-panel .btn{min-width:160px;font-size:16px}
+
+/* Choix de version */
+.chooser-panel{max-width:760px}
+.chooser-panel h2{margin-right:40px}
+.os-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+.os-card{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;
+  padding:26px 16px 20px;border-radius:16px;border:1px solid var(--line-2);background:var(--bg-2);cursor:pointer;
+  transition:transform .25s var(--ease),border-color .25s,box-shadow .25s,background .25s
+}
+.os-card:hover:not([aria-disabled="true"]){
+  transform:translateY(-4px);border-color:var(--amber);
+  background:linear-gradient(180deg,rgba(244,168,103,.08),rgba(232,128,106,.04));
+  box-shadow:0 20px 50px -24px rgba(232,128,106,.6)
+}
+.os-card svg{width:46px;height:46px;color:var(--text)}
+.os-card .os-name{font-weight:800;font-size:17px}
+.os-card .os-file{font-size:12px;color:var(--muted)}
+.os-card .badge{position:absolute;top:10px;right:10px}
+.os-card.rec{border-color:rgba(244,168,103,.6)}
+.os-card[aria-disabled="true"]{cursor:not-allowed;opacity:.5;filter:grayscale(1)}
+.os-card[aria-disabled="true"] .badge-soon{filter:none}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.chooser-foot{margin-top:18px;font-size:12.5px;color:var(--dim);text-align:center}
+
+/* Disclaimers */
+.disc-panel{max-width:720px;padding:0;overflow:auto}
+.disc-head{
+  display:flex;align-items:center;gap:16px;padding:24px 28px;border-bottom:1px solid var(--line);
+  background:linear-gradient(120deg,rgba(244,168,103,.10),rgba(232,128,106,.06))
+}
+.disc-head .ico{width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;background:rgba(244,168,103,.12);border:1px solid rgba(244,168,103,.3)}
+.disc-head .ico svg{width:28px;height:28px;color:var(--amber)}
+.disc-head h2{margin:0 0 2px;font-size:21px}
+.disc-head p{margin:0;color:var(--muted);font-size:13px}
+.disc-body{padding:24px 28px}
+.disc-body h3{font-size:15px;color:var(--amber);margin:22px 0 10px;letter-spacing:.02em}
+.disc-body h3:first-child{margin-top:0}
+.disc-body p,.disc-body li{font-size:14px;color:#d8cfc6}
+.disc-body .steps li{padding-bottom:12px}
+.disc-body .hint{font-size:12.5px;color:var(--dim)}
+.disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.disc-tile{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.disc-tile b{display:block;margin-bottom:4px;font-size:13.5px}
+.disc-tile p{margin:0;font-size:13px;color:var(--muted)}
+.kbd{display:inline-block;padding:1px 7px;border-radius:6px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--text);font-size:12.5px;white-space:nowrap}
+.ai-box{margin-top:20px;border:1px solid rgba(244,168,103,.3);border-radius:14px;padding:16px 18px;background:rgba(244,168,103,.04)}
+.ai-box h3{margin-top:0!important}
+.gh-link{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;margin-top:4px}
+.gh-link svg{width:16px;height:16px}
+.disc-foot{display:flex;justify-content:flex-end;padding:0 28px 24px}
+
+/* Lancement du téléchargement */
+.launch{
+  position:fixed;left:50%;bottom:28px;z-index:90;width:min(420px,calc(100% - 32px));
+  transform:translate(-50%,20px);opacity:0;visibility:hidden;
+  background:rgba(25,18,16,.96);border:1px solid rgba(244,168,103,.35);border-radius:16px;padding:16px 18px;
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.8);backdrop-filter:blur(10px);
+  transition:opacity .3s,visibility .3s,transform .35s var(--ease)
+}
+.launch.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.launch-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.launch-top .spin{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--amber);animation:spin .8s linear infinite;flex:none}
+.launch-top b{display:block;font-size:14px}
+.launch-top span{font-size:12px;color:var(--muted)}
+.launch .bar{height:5px;border-radius:999px;background:var(--line);overflow:hidden;position:relative}
+.launch .bar::after{content:"";position:absolute;inset:0;width:40%;border-radius:inherit;background:var(--grad);animation:indet 1.1s var(--ease) infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes indet{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
+
+/* Toast */
+.toast{
+  position:fixed;left:50%;bottom:24px;z-index:200;transform:translate(-50%,20px);opacity:0;visibility:hidden;
+  background:var(--panel-2);border:1px solid rgba(244,168,103,.4);border-radius:12px;padding:11px 18px;font-size:13.5px;
+  box-shadow:0 0 0 3px rgba(244,168,103,.08),0 20px 50px -20px rgba(0,0,0,.8);transition:all .3s var(--ease);max-width:calc(100% - 32px)
+}
+.toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .reg-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .features{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .quick .prefix{display:none}
+  .boot{font-size:11px}
+  .tui-body{font-size:10.5px}
+  .stat{padding:14px}
+  .nav a .idx{display:none}
+  .brand .word small{display:none}
+}
+@media (max-width:700px){
+  .art{display:none}
+  .art-mini{display:block}
+  .nav a{padding:8px 8px;font-size:10.5px;letter-spacing:.12em}
+  .features{grid-template-columns:1fr}
+  .reg-group{grid-template-columns:1fr;gap:10px;padding:18px 0}
+  .reg-char{position:static;display:flex;align-items:baseline;gap:10px}
+  .reg-char b{font-size:36px}
+  .reg-list{grid-template-columns:1fr}
+  .reg-index{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .reg-index::-webkit-scrollbar{display:none}
+  .reg-index button{flex:none}
+  .dl-row{flex-direction:column}
+  .os-grid{grid-template-columns:1fr}
+  .os-card{flex-direction:row;text-align:left;padding:16px}
+  .os-card svg{width:34px;height:34px}
+  .os-card .badge{position:static;margin-left:auto}
+  .disc-grid{grid-template-columns:1fr}
+  .disc-head{padding:20px}
+  .disc-body{padding:20px}
+  .disc-foot{padding:0 20px 20px}
+  .disc-foot .btn{width:100%}
+  .to-top{right:14px;bottom:14px}
+  /* Pop-ups en "bottom sheet" sur téléphone */
+  .modal{align-items:flex-end;padding:0}
+  .modal-panel{border-radius:22px 22px 0 0;max-height:92vh;transform:translateY(40px)}
+  .welcome-panel{padding:34px 22px calc(26px + env(safe-area-inset-bottom))}
+  .welcome-panel .btn{width:100%}
+  .chooser-panel{padding:24px 18px calc(22px + env(safe-area-inset-bottom))}
+}
+@media (max-width:520px){
+  .brand .word{display:none}
+  .site-header{padding:0 12px}
+  .nav{gap:2px}
+  .nav a{padding:8px 6px}
+}
+@media (max-width:420px){
+  .cta-row .btn{width:100%;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+
+<header class="site-header">
+  <a class="brand" href="#/" aria-label="MAELSTRÖM — accueil">
+<pre class="glyph" aria-hidden="true">███╗   ███╗
+████╗ ████║
+██╔████╔██║
+██║╚██╔╝██║
+██║ ╚═╝ ██║
+╚═╝     ╚═╝</pre>
+    <span class="word"><b>MAELSTRÖM</b><small>v6.1 · téléchargeur universel</small></span>
+  </a>
+  <nav class="nav" aria-label="Navigation principale">
+    <a href="#/" data-route="/"><span class="idx">01</span>ACCUEIL</a>
+    <a href="#/capabilities" data-route="/capabilities"><span class="idx">02</span>CAPABILITIES</a>
+    <a href="#/notice" data-route="/notice"><span class="idx">03</span>NOTICE</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ================= ACCUEIL ================= -->
+  <div class="view" data-view="/">
+    <div class="wrap">
+      <section class="hero">
+<pre class="art" aria-label="MAELSTROM">███╗   ███╗ █████╗ ███████╗██╗     ███████╗████████╗██████╗  ██████╗ ███╗   ███╗
+████╗ ████║██╔══██╗██╔════╝██║     ██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗ ████║
+██╔████╔██║███████║█████╗  ██║     ███████╗   ██║   ██████╔╝██║   ██║██╔████╔██║
+██║╚██╔╝██║██╔══██║██╔══╝  ██║     ╚════██║   ██║   ██╔══██╗██║   ██║██║╚██╔╝██║
+██║ ╚═╝ ██║██║  ██║███████╗███████╗███████║   ██║   ██║  ██║╚██████╔╝██║ ╚═╝ ██║
+╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝</pre>
+ <div class="art-mini grad" aria-hidden="true">MAELSTROM</div>
+        <p class="tagline">Téléchargeur universel · <span class="v6">v6.1</span> — vidéos et musique depuis <b>1 750+ sites</b>, en 10 langues, pilotable depuis votre téléphone.</p>
+
+        <div class="tui" aria-hidden="true">
+   <div class="tui-bar">
+     <span class="dots"><i></i><i></i><i></i></span>
+     <span class="ttl">MAELSTRÖM v6.1 — Terminal</span>
+          </div>
+   <div class="tui-body" id="tui-demo"></div>
+ </div>
+        <p class="tui-hint">Aperçu du menu TUI réel — tout se pilote au clavier, sans souris.</p>
+
+ <div class="boot" id="bootlog" aria-hidden="true"></div>
+
+        <div class="cta-row">
+          <button class="btn btn-primary" type="button" data-open-chooser><span class="arr">⇩</span> TÉLÉCHARGER MAELSTROM</button>
+          <a class="btn" href="#/notice"><span class="arr">→</span> LIRE LA NOTICE</a>
+   <a class="btn" href="#/capabilities"><span class="arr">→</span> SITES SUPPORTÉS</a>
+ </div>
+
+        <div class="quick" role="search">
+          <span class="prefix">maelström&nbsp;›</span>
+   <input id="quick-input" type="text" placeholder="votre site est-il supporté ? (youtube, arte, twitch…)" aria-label="Vérifier la compatibilité d'un site" autocomplete="off" spellcheck="false">
+          <button id="quick-go" type="button">VÉRIFIER</button>
+        </div>
+        <p class="quick-hint">Test rapide de compatibilité depuis l'accueil · Entrée pour valider</p>
+      </section>
+
+      <section class="section">
+        <div class="sec-head">
+          <div class="path"><span class="u">maelstrom.local</span>/capabilities · registre</div>
+   <h2>CE QUE MAELSTRÖM SAIT TÉLÉCHARGER</h2>
+          <p class="sub">Le moteur s'appuie sur <b>yt-dlp</b> et <b>ffmpeg</b> (installés automatiquement au premier lancement) pour interroger plus de 1 750 plateformes : vidéo, direct, replay, playlists, chaînes, musique…</p>
+        </div>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="section">
+        <div class="features">
+   <div class="card">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg>
+     <h3>Plus de 1 700 sites</h3>
+     <p>Vidéos, musiques, playlists : un seul outil pour presque tout le web.</p>
+          </div>
+   <div class="card">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>
+     <h3>Simple à lancer</h3>
+     <p>Un fichier, un double-clic (ou une commande sous Linux) et c'est parti.</p>
+   </div>
+          <div class="card">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+     <h3>Open source</h3>
+     <p>Le code est lisible par tous. Aucun compte, aucun abonnement.</p>
+   </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ================= CAPABILITIES ================= -->
+  <div class="view" data-view="/capabilities">
+    <div class="wrap">
+      <div class="cap-head">
+ <p class="kicker">Registre des extracteurs</p>
+        <h2>Sites compatibles</h2>
+        <div class="search-row">
+          <label class="search">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+     <span class="sr-only">Rechercher un site</span>
+     <input id="capSearch" type="search" placeholder="Rechercher un site (ex : youtube, twitch…)" autocomplete="off" spellcheck="false">
+          </label>
+          <div class="chips" role="group" aria-label="Filtrer par état">
+     <button class="chip active" type="button" data-filter="all">Tous</button>
+     <button class="chip" type="button" data-filter="ok">Fonctionnels</button>
+     <button class="chip" type="button" data-filter="ko">Hors service</button>
+   </div>
+        </div>
+        <p class="result-info" id="resultInfo" aria-live="polite"></p>
+      </div>
+      <nav class="reg-index" id="regIndex" aria-label="Index alphabétique"></nav>
+      <div id="registry"></div>
+    </div>
+  </div>
+
+  <!-- ================= NOTICE ================= -->
+  <div class="view" data-view="/notice">
+    <div class="wrap notice">
+      <section>
+        <p class="kicker">Notice</p>
+ <h2>Bien démarrer avec <span class="grad">MAELSTRÖM</span></h2>
+        <p class="muted">MAELSTRÖM est un téléchargeur universel : vous lui donnez un lien, il récupère la vidéo ou l'audio. Il fonctionne avec plus de 1 700 sites.</p>
+      </section>
+
+      <section id="installation">
+        <p class="kicker">Installation</p>
+ <h2>Télécharger et lancer</h2>
+        <div class="dl-row">
+          <button class="btn btn-primary" type="button" data-download="win" data-hover-sound="win">
+     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.5v7H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg>
+     <span class="lbl">Télécharger Maelstrom.bat</span>
+          </button>
+          <button class="btn btn-primary" type="button" data-download="linux" data-hover-sound="linux">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>
+     <span class="lbl">Télécharger Maelstrom.sh</span>
+   </button>
+   <button class="btn" type="button" aria-disabled="true" data-mac data-hover-sound="mac">
+     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.8-3-.8C6.9 7.3 5.4 8.2 4.6 9.7c-1.700 2.9-.4 7.2 1.2 9.6.8 1.2 1.7 2.4 3 2.4 1.2 0 1.6-.8 3.1-.8s1.8.8 3.1.8 2.1-1.2 2.9-2.3c.9-1.3 1.3-2.6 1.3-2.7 0 0-2.8-1-2.8-4.1zM14.1 5.5c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg>
+     <span class="lbl">macOS</span><span class="badge badge-soon">Bientôt disponible</span>
+   </button>
+ </div>
+
+        <h3>Sous Windows</h3>
+ <ol class="steps">
+          <li>Cliquez sur <b>Télécharger Maelstrom.bat</b>. Si votre navigateur signale le fichier, choisissez <span class="kbd">Conserver</span>.</li>
+          <li>Double-cliquez sur le fichier. Une fenêtre bleue « Windows a protégé votre ordinateur » peut apparaître : pas d'inquiétude, cliquez sur <span class="kbd">Informations complémentaires</span> puis <span class="kbd">Exécuter quand même</span>.</li>
+          <li>Suivez les instructions affichées dans la fenêtre : c'est prêt.</li>
+        </ol>
+
+        <h3>Sous Linux</h3>
+        <ol class="steps">
+   <li>Ouvrez un terminal dans le dossier du fichier (clic droit → « Ouvrir un terminal ici »).</li>
+   <li>Rendez le script exécutable :
+     <div class="codeblock inline"><pre id="nCmd1">chmod +x maelstrom.sh</pre><button class="copy" type="button" data-copy="nCmd1">COPIER</button></div></li>
+          <li>Lancez-le :
+     <div class="codeblock inline"><pre id="nCmd2">./maelstrom.sh</pre><button class="copy" type="button" data-copy="nCmd2">COPIER</button></div></li>
+        </ol>
+
+        <div class="note">Le fichier n'est pas signé numériquement : un certificat de signature coûte cher et le projet est encore en développement. Si vous avez un doute, vous pouvez l'envoyer à votre IA préférée ou à VirusTotal pour qu'ils l'analysent avant de l'ouvrir.</div>
+      </section>
+
+      <section>
+        <p class="kicker">Utilisation</p>
+        <h2>Télécharger une vidéo</h2>
+        <ol class="steps">
+   <li>Copiez le lien de la vidéo ou de la musique dans votre navigateur.</li>
+   <li>Collez-le dans MAELSTRÖM et validez avec <span class="kbd">Entrée</span>.</li>
+   <li>Choisissez le format proposé : le fichier arrive dans votre dossier de téléchargement.</li>
+ </ol>
+        <p class="muted">Vous ne savez pas si un site est pris en charge ? Consultez la <a href="#/capabilities">liste des sites compatibles</a>.</p>
+      </section>
+
+      <section>
+        <p class="kicker">FAQ</p>
+ <h2>Questions fréquentes</h2>
+        <details><summary>Est-ce que c'est gratuit ?</summary><div class="ans">Oui, entièrement. MAELSTRÖM est un projet open source, sans compte ni abonnement.</div></details>
+        <details><summary>Pourquoi Windows affiche un avertissement ?</summary><div class="ans">Le fichier n'est pas signé avec un certificat payant (à partir d'environ 100 € par an). Windows SmartScreen se méfie donc par défaut. Cliquez sur « Informations complémentaires » puis « Exécuter quand même ».</div></details>
+        <details><summary>Et sur Mac ou Linux ?</summary><div class="ans">Linux est disponible avec le fichier <b>maelstrom.sh</b>. La version macOS arrive bientôt.</div></details>
+        <details><summary>Un site ne fonctionne pas, que faire ?</summary><div class="ans">Vérifiez son état dans la <a href="#/capabilities">liste des sites</a> : un point rouge signifie que l'extracteur est temporairement hors service.</div></details>
+      </section>
+    </div>
+  </div>
+
+  <!-- ================= 404 ================= -->
+  <div class="view" data-view="404">
+    <div class="wrap nf">
+      <b class="grad">404</b>
+      <p class="muted">Cette page s'est perdue dans le maelström.</p>
+      <a class="btn" href="#/">Retour à l'accueil</a>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <small>MAELSTRÖM v6.1 · projet open source</small>
+    <button class="btn btn-primary" type="button" data-open-chooser>TÉLÉCHARGER</button>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" type="button" aria-label="Retour en haut">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+</button>
+
+<!-- ================= POP-UP BIENVENUE ================= -->
+<div class="modal" id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel welcome-panel">
+    <h2 id="welcomeTitle" class="grad">Bienvenue</h2>
+    <p>Bienvenue sur MAELSTRÖM, le téléchargeur universel. Installez-vous, on vous fait visiter.</p>
+    <button class="btn btn-primary" type="button" id="helloBtn" autofocus>Salut !</button>
+  </div>
+</div>
+
+<!-- ================= POP-UP CHOIX DE VERSION ================= -->
+<div class="modal" id="chooser" hidden role="dialog" aria-modal="true" aria-labelledby="chooserTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel chooser-panel">
+    <button class="modal-close" type="button" data-close aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <h2 id="chooserTitle">Quelle version utilisez-vous ?</h2>
+    <p class="muted" style="margin:0">Choisissez votre système d'exploitation pour lancer le téléchargement.</p>
+    <div class="os-grid">
+      <button class="os-card" type="button" data-os="win" data-hover-sound="win">
+        <span class="badge badge-rec" data-rec hidden>Recommandé</span>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.5v7H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg>
+        <span><span class="os-name">Windows</span><br><span class="os-file">maelstrom.bat</span></span>
+      </button>
+      <button class="os-card" type="button" data-os="linux" data-hover-sound="linux">
+        <span class="badge badge-rec" data-rec hidden>Recommandé</span>
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3"/><path d="M12 15h5"/></svg>
+ <span><span class="os-name">Linux</span><br><span class="os-file">maelstrom.sh</span></span>
+      </button>
+      <button class="os-card" type="button" data-os="mac" aria-disabled="true" data-hover-sound="mac">
+ <span class="badge badge-soon">Bientôt disponible</span>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.8-3-.8C6.9 7.3 5.4 8.2 4.6 9.7c-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.7 2.4 3 2.4 1.2 0 1.6-.8 3.1-.8s1.8.8 3.1.8 2.1-1.2 2.9-2.3c.9-1.3 1.3-2.6 1.3-2.7 0 0-2.8-1-2.8-4.1zM14.1 5.5c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg>
+        <span><span class="os-name">macOS</span><br><span class="os-file">en préparation</span></span>
+      </button>
+    </div>
+    <p class="chooser-foot">Gratuit · open source · aucune inscription</p>
+  </div>
+</div>
+
+<!-- ================= DISCLAIMER WINDOWS ================= -->
+<div class="modal" id="discWin" hidden role="dialog" aria-modal="true" aria-labelledby="discWinTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel disc-panel">
+    <button class="modal-close" type="button" data-close aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div class="disc-head">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></div>
+      <div><h2 id="discWinTitle">Téléchargement lancé</h2><p>maelstrom.bat · quelques infos avant de l'ouvrir</p></div>
+    </div>
+    <div class="disc-body">
+      <h3>Pourquoi Windows va se méfier</h3>
+      <p>MAELSTRÖM est un projet <b>open source et gratuit</b>. Pour que Windows reconnaisse un fichier comme « de confiance », il faut le signer avec un certificat de signature de code, vendu <b>à partir d'environ 100 € par an</b>. Ce fichier n'est donc pas signé, et c'est tout à fait normal pour un projet comme celui-ci.</p>
+
+      <div class="disc-grid">
+        <div class="disc-tile">
+          <b>1 · Dans le navigateur</b>
+          <p>Chrome ou Edge peuvent signaler le fichier comme peu téléchargé ou potentiellement dangereux. Cliquez sur <span class="kbd">Conserver</span>.</p>
+        </div>
+        <div class="disc-tile">
+   <b>2 · Au lancement</b>
+   <p>La fenêtre bleue « Windows a protégé votre ordinateur » peut s'afficher. Cliquez sur <span class="kbd">Informations complémentaires</span> puis <span class="kbd">Exécuter quand même</span>.</p>
+ </div>
+      </div>
+      <p class="hint" style="margin-top:10px">Bon à savoir : même avec un certificat, SmartScreen peut afficher un avertissement tant qu'un fichier est récent.</p>
+
+      <a class="gh-link" href="" data-github>
+ <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
+ Code source bientôt sur GitHub
+      </a>
+
+      <div class="ai-box">
+ <h3>Pas confiance ? Demandez à votre IA préférée</h3>
+ <p>Envoyez-lui ce prompt avec le fichier <b>maelstrom.bat</b>, ou écrivez le vôtre. Votre IA peut lire le code et vous expliquer ce qu'il fait.</p>
+        <div class="codeblock"><pre id="promptWin">Analyse ce fichier .bat et dis-moi s'il contient quelque chose de malveillant (comportements suspects…). Dis-moi clairement si je peux l'exécuter sans risque pour ma machine et explique en détail ce qu'il fait.</pre><button class="copy" type="button" data-copy="promptWin">COPIER</button></div>
+        <p class="hint" style="margin:0">Fichier trop lourd pour votre IA (environ 170 Ko) ? Passez-le sur <a href="https://www.virustotal.com/" target="_blank" rel="noopener noreferrer">VirusTotal</a>, la référence des pros de la cybersécurité pour vérifier un fichier avant de l'exécuter.</p>
+      </div>
+    </div>
+    <div class="disc-foot"><button class="btn btn-primary" type="button" data-close>J'ai compris</button></div>
+  </div>
+</div>
+
+<!-- ================= DISCLAIMER LINUX ================= -->
+<div class="modal" id="discLinux" hidden role="dialog" aria-modal="true" aria-labelledby="discLinuxTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel disc-panel">
+    <button class="modal-close" type="button" data-close aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div class="disc-head">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3"/><path d="M12 15h5"/></svg></div>
+      <div><h2 id="discLinuxTitle">Téléchargement lancé</h2><p>maelstrom.sh · trois commandes et c'est parti</p></div>
+    </div>
+    <div class="disc-body">
+      <p>Bonne nouvelle : pas de grande fenêtre bleue qui fait peur ici <span class="muted">(Linux vous fait confiance… enfin, presque)</span>. Il suffit de rendre le script exécutable, puis de le lancer.</p>
+      <ol class="steps">
+        <li>Ouvrez un terminal dans le dossier du fichier <span class="muted">(clic droit → « Ouvrir un terminal ici »)</span>.</li>
+        <li>Rendez le script exécutable :
+   <div class="codeblock inline"><pre id="lCmd1">chmod +x maelstrom.sh</pre><button class="copy" type="button" data-copy="lCmd1">COPIER</button></div></li>
+        <li>Lancez-le :
+          <div class="codeblock inline"><pre id="lCmd2">./maelstrom.sh</pre><button class="copy" type="button" data-copy="lCmd2">COPIER</button></div></li>
+      </ol>
+
+      <a class="gh-link" href="" data-github>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
+        Code source bientôt sur GitHub
+      </a>
+
+      <div class="ai-box">
+        <h3>Vous n'êtes pas sûr du code ?</h3>
+        <p>Pas d'inquiétude, on comprend. Demandez à votre IA préférée : envoyez-lui ce prompt avec le fichier <b>maelstrom.sh</b>, ou écrivez le vôtre. Elle peut lire le script et vous expliquer ce qu'il fait.</p>
+        <div class="codeblock"><pre id="promptLinux">Analyse ce script et dis-moi s'il contient quelque chose de malveillant (comportements suspects…). Dis-moi clairement si je peux l'exécuter sans risque pour ma machine et explique en détail ce qu'il fait.</pre><button class="copy" type="button" data-copy="promptLinux">COPIER</button></div>
+        <p class="hint" style="margin:0">Vous pouvez aussi le passer sur <a href="https://www.virustotal.com/" target="_blank" rel="noopener noreferrer">VirusTotal</a>, la référence des pros de la cybersécurité.</p>
+      </div>
+    </div>
+    <div class="disc-foot"><button class="btn btn-primary" type="button" data-close>C'est parti</button></div>
+  </div>
+</div>
+
+<!-- Animation "Téléchargement lancé" -->
+<div class="launch" id="launch" role="status" aria-live="polite">
+  <div class="launch-top">
+    <div class="spin"></div>
+    <div><b>Téléchargement lancé</b><span id="launchFile">maelstrom.bat</span></div>
+  </div>
+  <div class="bar"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- DONNÉES : fichier maelstrom-data.js à côté de index.html -->
+<script src="maelstrom-data.js"></script>
+<script>
+window.__MAELSTROM_DATA__ = window.__MAELSTROM_DATA__ || [];
+</script>
+
+<script>
+(() => {
+"use strict";
+
+/* =====================================================================
+   CONFIGURATION DES SONS  (fichiers à côté de index.html)
+   volume : 0 → 1
+   ===================================================================== */
+const SOUNDS = {
+  hello:    { file: "hello.mp3",         volume: 0.55 }, // bouton « Salut ! »
+  open:     { file: "popup.mp3",  volume: 0.40 }, // ouverture d'une pop-up
+  close:    { file: "whoush.wav",        volume: 0.35 }, // fermeture d'une pop-up
+  win:      { file: "w11.mp3",           volume: 0.35 }, // survol Windows
+  linux:    { file: "linux.mp3",         volume: 0.35 }, // survol Linux
+  mac:      { file: "mac.mp3",           volume: 0.35 }, // survol / clic macOS
+  validate: { file: "validate.wav",      volume: 0.45 }, // clic Windows / Linux
+  warn:     { file: "avertissement.mp3", volume: 0.45 }, // apparition du disclaimer
+  copy:     { file: "prompt.mp3", volume: 0.40 }  // bouton COPIER
+};
+const HOVER_TICK_VOLUME = 0.025;   // petit "tick" synthétisé au survol (0 = désactivé)
+const HOVER_TICK_SELECTOR = "a, button, .btn, .card, .chip, summary";
+const DISCLAIMER_DELAY = 2000;     // ms entre le clic et l'affichage du disclaimer
+const WELCOME_KEY = "maelstrom.welcomed";
+const FILES = {
+  win:   { file: "maelstrom.bat", modal: "discWin" },
+  linux: { file: "maelstrom.sh",  modal: "discLinux" }
+};
+
+/* ---------- Environnement ---------- */
+const IS_TOUCH = matchMedia("(pointer: coarse)").matches || matchMedia("(hover: none)").matches;
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+/* =====================================================================
+   AUDIO
+   ===================================================================== */
+let audioUnlocked = false;
+const audioCache = {};
+let actx = null;
+
+function unlockAudio() {
+  if (audioUnlocked || IS_TOUCH) return;
+  audioUnlocked = true;
+  for (const k in SOUNDS) {
+    const a = new Audio(SOUNDS[k].file);
+    a.preload = "auto";
+    audioCache[k] = a;
+  }
+}
+// Seul un vrai clic / une touche débloque le son (pas le scroll ni le survol)
+document.addEventListener("pointerdown", unlockAudio, { capture: true });
+document.addEventListener("keydown", unlockAudio, { capture: true });
+
+function play(key) {
+  if (IS_TOUCH || !audioUnlocked) return;
+  const cfg = SOUNDS[key];
+  if (!cfg) return;
+  const base = audioCache[key] || (audioCache[key] = new Audio(cfg.file));
+  const a = base.cloneNode();
+  a.volume = Math.max(0, Math.min(1, cfg.volume));
+  a.play().catch(() => {});
+}
+
+let lastTick = 0;
+function tick() {
+  if (IS_TOUCH || !audioUnlocked || HOVER_TICK_VOLUME <= 0) return;
+  const now = performance.now();
+  if (now - lastTick < 70) return;
+  lastTick = now;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+    const t = actx.currentTime;
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(1900, t);
+    o.frequency.exponentialRampToValueAtTime(1300, t + 0.035);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(HOVER_TICK_VOLUME, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g).connect(actx.destination);
+    o.start(t);
+    o.stop(t + 0.06);
+  } catch (e) {}
+}
+
+/* Survol : sons dédiés (OS) ou tick générique */
+let hoverEl = null;
+document.addEventListener("pointerover", (e) => {
+  if (e.pointerType && e.pointerType !== "mouse") return;
+  const special = e.target.closest("[data-hover-sound]");
+  const generic = e.target.closest(HOVER_TICK_SELECTOR);
+  const el = special || generic;
+  if (!el || el === hoverEl) return;
+  hoverEl = el;
+  if (special) play(special.dataset.hoverSound);
+  else tick();
+});
+document.addEventListener("pointerout", (e) => {
+  if (hoverEl && !hoverEl.contains(e.relatedTarget)) hoverEl = null;
+});
+
+/* =====================================================================
+   TOAST + COPIE
+   ===================================================================== */
+let toastTimer;
+function toast(msg, ms = 2400) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), ms);
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+    ta.remove();
+    return ok;
+  }
+}
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-copy]");
+  if (!btn) return;
+  const src = document.getElementById(btn.dataset.copy);
+  if (!src) return;
+  const ok = await copyText(src.textContent.trim());
+  if (ok) {
+    play("copy");
+    btn.textContent = "COPIÉ";
+    btn.classList.add("done");
+    toast("Copié dans le presse-papiers");
+    setTimeout(() => { btn.textContent = "COPIER"; btn.classList.remove("done"); }, 1800);
+  } else {
+    toast("Impossible de copier : sélectionnez le texte manuellement");
+  }
+});
+
+/* =====================================================================
+   MODALES (focus piégé, Échap, clic extérieur)
+   ===================================================================== */
+const stack = [];
+const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function openModal(id, { sound = "open" } = {}) {
+  const m = document.getElementById(id);
+  if (!m || stack.includes(m)) return;
+  m._returnFocus = document.activeElement;
+  m.hidden = false;
+  stack.push(m);
+  document.body.classList.add("modal-lock");
+  requestAnimationFrame(() => requestAnimationFrame(() => m.classList.add("open")));
+  if (sound) play(sound);
+  setTimeout(() => {
+    const f = m.querySelector("[autofocus]") || m.querySelector(".modal-panel button:not(.modal-close)") || m.querySelector(FOCUSABLE);
+    f && f.focus({ preventScroll: true });
+  }, 60);
+}
+
+function closeModal(m, { sound = "close" } = {}) {
+  if (!m || !stack.includes(m)) return;
+  stack.splice(stack.indexOf(m), 1);
+  m.classList.remove("open");
+  if (sound) play(sound);
+  if (typeof m._onClose === "function") m._onClose();
+  setTimeout(() => { if (!m.classList.contains("open")) m.hidden = true; }, 320);
+  if (!stack.length) document.body.classList.remove("modal-lock");
+  const r = m._returnFocus;
+  if (r && document.contains(r) && r.focus) r.focus({ preventScroll: true });
+}
+
+document.addEventListener("click", (e) => {
+  const c = e.target.closest("[data-close]");
+  if (!c) return;
+  const m = c.closest(".modal");
+  if (m) closeModal(m);
+});
+
+document.addEventListener("keydown", (e) => {
+  const top = stack[stack.length - 1];
+  if (!top) return;
+  if (e.key === "Escape") { e.preventDefault(); closeModal(top); return; }
+  if (e.key === "Tab") {
+    const f = $$(FOCUSABLE, top).filter(el => el.offsetParent !== null || el === document.activeElement);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    else if (!top.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  }
+});
+
+/* ---------- Bienvenue (une seule fois pour toujours) ---------- */
+function welcomeDone() {
+  try { localStorage.setItem(WELCOME_KEY, "1"); } catch (e) {}
+}
+function shouldWelcome() {
+  try { return !localStorage.getItem(WELCOME_KEY); } catch (e) { return false; }
+}
+const welcome = $("#welcome");
+welcome._onClose = welcomeDone;
+$("#helloBtn").addEventListener("click", () => {
+  play("hello");
+  closeModal(welcome, { sound: null }); // on laisse « hello » jouer seul
+});
+
+/* ---------- Choix de version ---------- */
+function detectOS() {
+  const p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "").toLowerCase();
+  const ua = navigator.userAgent.toLowerCase();
+  if (/android|iphone|ipad|ipod/.test(ua)) return null;
+  if (p.includes("win") || ua.includes("windows")) return "win";
+  if (p.includes("mac") || ua.includes("mac os")) return "mac";
+  if (p.includes("linux") || ua.includes("linux") || ua.includes("x11")) return "linux";
+  return null;
+}
+const OS = detectOS();
+if (OS === "win" || OS === "linux") {
+  const card = $(`.os-card[data-os="${OS}"]`);
+  card.classList.add("rec");
+  card.querySelector("[data-rec]").hidden = false;
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-open-chooser]")) {
+    openModal("chooser");
+    return;
+  }
+  const card = e.target.closest(".os-card");
+  if (card) {
+    if (card.dataset.os === "mac") { macSoon(card); return; }
+    closeModal($("#chooser"), { sound: null });
+    startDownload(card.dataset.os);
+    return;
+  }
+  const dl = e.target.closest("[data-download]");
+  if (dl) { startDownload(dl.dataset.download); return; }
+  const mac = e.target.closest("[data-mac]");
+  if (mac) { macSoon(mac); }
+});
+
+function macSoon(el) {
+  play("mac");
+  el.classList.remove("shake");
+  void el.offsetWidth;
+  el.classList.add("shake");
+  toast("La version macOS arrive bientôt");
+}
+
+/* ---------- Téléchargement (fetch + blob) ---------- */
+let launchTimer;
+function triggerSave(url, name) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function startDownload(os) {
+  const f = FILES[os];
+  if (!f) return;
+  play("validate");
+  const launch = $("#launch");
+  if (!IS_TOUCH) {
+    $("#launchFile").textContent = f.file;
+    launch.classList.add("show");
+  } else {
+    toast("Téléchargement lancé");
+  }
+  try {
+    const res = await fetch(f.file, { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    triggerSave(url, f.file);
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  } catch (err) {
+    triggerSave(f.file, f.file); // repli : lien direct
+  }
+  clearTimeout(launchTimer);
+  launchTimer = setTimeout(() => {
+    launch.classList.remove("show");
+    openModal(f.modal, { sound: "warn" });
+  }, DISCLAIMER_DELAY);
+}
+
+/* ---------- Lien GitHub (vide pour l'instant) ---------- */
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("[data-github]");
+  if (!a) return;
+  const href = (a.getAttribute("href") || "").trim();
+  if (!href || href === "#") { e.preventDefault(); return; }
+  e.preventDefault();
+  window.open(href, "_blank", "noopener");
+});
+
+/* =====================================================================
+   DONNÉES DU REGISTRE
+   ===================================================================== */
+function statusOf(e) {
+  if (typeof e.broken === "boolean") return !e.broken;
+  if (typeof e.ok === "boolean") return e.ok;
+  if (typeof e.working === "boolean") return e.working;
+  if (typeof e.enabled === "boolean") return e.enabled;
+  const s = String(e.status ?? e.state ?? "").toLowerCase();
+  if (/(broken|down|fail|ko|red|off|dead|hs|error)/.test(s)) return false;
+  return true;
+}
+function normalize(raw) {
+  let list = raw;
+  if (!list) return [];
+  if (!Array.isArray(list)) {
+    list = list.extractors || list.items || list.data || list.sites ||
+      Object.entries(list).map(([k, v]) => (v && typeof v === "object") ? { name: k, ...v } : { name: k, ok: v !== false && v !== "broken" });
+  }
+  return list.map((e) => {
+    if (typeof e === "string") {
+      const broken = /\(CURRENTLY BROKEN\)\s*$/i.test(e);
+      return { name: e.replace(/\s*\(CURRENTLY BROKEN\)\s*$/i, "").trim(), ok: !broken, desc: "" };
+    }
+    const name = String(e.name ?? e.id ?? e.key ?? e.title ?? e.extractor ?? "").trim();
+    return { name, ok: statusOf(e), desc: String(e.desc ?? e.description ?? "") };
+  }).filter(e => e.name);
+}
+const DATA = normalize(window.__MAELSTROM_DATA__);
+const nf = new Intl.NumberFormat("fr-FR");
+
+const TOTAL = DATA.length;
+const N_OK = DATA.filter(d => d.ok).length;
+const N_BROKEN = TOTAL - N_OK;
+const N_SITES = new Set(DATA.map(d => d.name.split(":")[0].trim().toLowerCase())).size;
+
+function charOf(name) {
+  const c = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
+  return /[0-9A-Z]/.test(c) ? c : "#";
+}
+const ORDER = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
+const sorted = DATA.slice().sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base", numeric: true }));
+
+/* =====================================================================
+   RENDU CAPABILITIES
+   ===================================================================== */
+const regEl = $("#registry");
+const idxEl = $("#regIndex");
+const searchEl = $("#capSearch");
+const infoEl = $("#resultInfo");
+let filter = "all";
+
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function highlight(name, q) {
+  if (!q) return esc(name);
+  const i = name.toLowerCase().indexOf(q);
+  if (i < 0) return esc(name);
+  return esc(name.slice(0, i)) + "<mark>" + esc(name.slice(i, i + q.length)) + "</mark>" + esc(name.slice(i + q.length));
+}
+
+function renderRegistry() {
+  const q = searchEl.value.trim().toLowerCase();
+  const groups = {};
+  let count = 0;
+  for (const e of sorted) {
+    if (filter === "ok" && !e.ok) continue;
+    if (filter === "ko" && e.ok) continue;
+    if (q && !e.name.toLowerCase().includes(q) && !e.desc.toLowerCase().includes(q)) continue;
+    (groups[charOf(e.name)] ||= []).push(e);
+    count++;
+  }
+
+  idxEl.innerHTML = ORDER.filter(c => c !== "#" || groups["#"])
+    .map(c => `<button type="button" data-jump="${c}" ${groups[c] ? "" : "disabled"} aria-label="Aller à ${c}">${c}</button>`).join("");
+
+  if (!DATA.length) {
+    regEl.innerHTML = `<p class="reg-empty">Aucune donnée chargée. Vérifie le fichier <b>maelstrom-data.js</b>.</p>`;
+  } else if (!count) {
+    regEl.innerHTML = `<p class="reg-empty">Aucun site ne correspond à « ${esc(searchEl.value.trim())} ».</p>`;
+  } else {
+    let html = "";
+    for (const c of ORDER) {
+      const g = groups[c];
+      if (!g) continue;
+      html += `<section class="reg-group" id="grp-${c === "#" ? "other" : c}" data-char="${c}">
+ <div class="reg-char"><b>${c}</b><span>${g.length} site${g.length > 1 ? "s" : ""}</span></div>
+        <ul class="reg-list">${g.map(e =>
+   `<li class="entry ${e.ok ? "ok" : "ko"}" title="${esc(e.name)}${e.ok ? "" : " (hors service)"}"><span class="dot" aria-hidden="true"></span><span class="name">${highlight(e.name, q)}</span><span class="sr-only">${e.ok ? "fonctionnel" : "hors service"}</span></li>`
+ ).join("")}</ul></section>`;
+    }
+    regEl.innerHTML = html;
+  }
+  infoEl.textContent = DATA.length
+    ? `${nf.format(count)} résultat${count > 1 ? "s" : ""} sur ${nf.format(DATA.length)} extracteurs`
+    : "";
+  updateActiveChar();
+}
+
+let searchT;
+searchEl.addEventListener("input", () => { clearTimeout(searchT); searchT = setTimeout(renderRegistry, 80); });
+$$(".chip[data-filter]").forEach(ch => ch.addEventListener("click", () => {
+  $$(".chip[data-filter]").forEach(c => c.classList.toggle("active", c === ch));
+  filter = ch.dataset.filter;
+  renderRegistry();
+}));
+
+/* Index : défilement JS (pas d'ancre #, pour ne pas casser le routeur) */
+function stickyOffset() {
+  const h = $(".site-header").offsetHeight;
+  return h + idxEl.offsetHeight + 8;
+}
+idxEl.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-jump]");
+  if (!b || b.disabled) return;
+  const sec = regEl.querySelector(`[data-char="${b.dataset.jump}"]`);
+  if (!sec) return;
+  const y = sec.getBoundingClientRect().top + window.scrollY - stickyOffset() + 1;
+  window.scrollTo({ top: y, behavior: REDUCED ? "auto" : "smooth" });
+});
+
+/* Lettre active pendant le scroll */
+let activeChar = null, rafPending = false;
+function updateActiveChar() {
+  const secs = $$(".reg-group", regEl);
+  if (!secs.length) return;
+  const line = stickyOffset() + 4;
+  let cur = secs[0].dataset.char;
+  for (const s of secs) {
+    if (s.getBoundingClientRect().top <= line) cur = s.dataset.char; else break;
+  }
+  if (cur === activeChar && idxEl.querySelector(".active")) return;
+  activeChar = cur;
+  $$("button", idxEl).forEach(b => b.classList.toggle("active", b.dataset.jump === cur));
+  const btn = idxEl.querySelector(".active");
+  if (btn && idxEl.scrollWidth > idxEl.clientWidth) {
+    idxEl.scrollLeft = btn.offsetLeft - idxEl.clientWidth / 2 + btn.offsetWidth / 2;
+  }
+}
+
+/* Bouton retour en haut */
+const toTop = $("#toTop");
+toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }));
+
+window.addEventListener("scroll", () => {
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    const onCap = currentPath === "/capabilities";
+    toTop.classList.toggle("show", onCap && window.scrollY > 600);
+    if (onCap) updateActiveChar();
+  });
+}, { passive: true });
+
+/* =====================================================================
+   ACCUEIL : stats, boot log, menu TUI animé, vérification rapide
+   ===================================================================== */
+function buildStats() {
+  $("#stats").innerHTML =
+    `<div class="stat"><div class="n">${nf.format(TOTAL)}</div><div class="l">EXTRACTEURS AU REGISTRE</div></div>` +
+    `<div class="stat"><div class="n ok">${nf.format(N_OK)}</div><div class="l">OPÉRATIONNELS</div></div>` +
+    `<div class="stat"><div class="n">${nf.format(N_BROKEN)}</div><div class="l">EN MAINTENANCE</div></div>` +
+    `<div class="stat"><div class="n gold">10</div><div class="l">LANGUES DISPONIBLES</div></div>`;
+}
+
+const BOOT_LINES = [
+  ["<span class='p'>maelström</span> <span class='v'>v6.1</span> — démarrage du terminal…", 110],
+  ["outils yt-dlp + ffmpeg vérifiés <span class='ok'>[OK]</span>", 200],
+  ["registre chargé : <span class='v'>" + nf.format(TOTAL) + "</span> extracteurs · <span class='v'>" + nf.format(N_SITES) + "</span> plateformes", 150],
+  ["langues disponibles : <span class='v'>10</span> · serveur téléphone <span class='ok'>[PRÊT]</span>", 130],
+  ["prêt. <span class='p'>collez un lien, tout se pilote au clavier.</span> <span class='cursor'></span>", 0]
+];
+let bootPlayed = false;
+function playBoot() {
+  const el = $("#bootlog");
+  if (!el || bootPlayed) return;
+  bootPlayed = true;
+  if (REDUCED) {
+    el.innerHTML = BOOT_LINES.map(l => "<div class='ln'>" + l[0] + "</div>").join("");
+    return;
+  }
+  let i = 0;
+  (function next() {
+    if (i >= BOOT_LINES.length) return;
+    const line = document.createElement("div");
+    line.className = "ln";
+    line.innerHTML = BOOT_LINES[i][0];
+    el.appendChild(line);
+    const d = BOOT_LINES[i][1];
+    i++;
+    if (i < BOOT_LINES.length) setTimeout(next, d + 140);
+  })();
+}
+
+/* Menu TUI : la sélection descend comme si on naviguait au clavier */
+const TUI_ITEMS = [
+  "❯ Télécharger un lien",
+  "File d'attente (plusieurs liens)",
+  "Paramètres",
+  "Outils",
+  "Ouvrir le dossier de téléchargement",
+  "Quitter"
+];
+function drawTui(sel) {
+  const el = $("#tui-demo");
+  if (!el) return;
+  const L = '<span class="m">  </span>';
+  let h = L + '<span class="a">╭─ ✦ Menu principal</span><span class="rule"> ─────────────────────────────────────</span>\n'
+        + L + '<span class="rule">│</span>\n';
+  TUI_ITEMS.forEach((it, i) => {
+    h += L + '<span class="rule">│</span>  <span class="d">' + (i + 1) + '</span>   '
+       + (i === sel ? '<span class="sel">' + esc(it) + '</span>' : esc(it)) + '\n';
+  });
+  h += L + '<span class="rule">│</span>\n'
+     + L + '<span class="rule">╰─</span> <span class="d">↑↓ naviguer  ·  Entrée valider  ·  Échap retour</span>';
+  el.innerHTML = h;
+}
+let tuiPlayed = false;
+function playTuiMenu() {
+  if (tuiPlayed || REDUCED) return;
+  tuiPlayed = true;
+  let step = 0;
+  const t = setInterval(() => {
+    step++;
+    if (step > TUI_ITEMS.length + 2) { clearInterval(t); return; }
+    drawTui(step % TUI_ITEMS.length);
+  }, 1500);
+}
+
+/* Vérification rapide → page Capabilities */
+const qi = $("#quick-input");
+function goQuick() {
+  const v = qi.value.trim();
+  if (!v) { toast("Saisissez un nom de site à vérifier (ex. youtube)."); qi.focus(); return; }
+  location.hash = "#/capabilities?q=" + encodeURIComponent(v);
+}
+$("#quick-go").addEventListener("click", goQuick);
+qi.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); goQuick(); } });
+
+buildStats();
+drawTui(0);
+
+/* =====================================================================
+   ROUTEUR (hash)
+   ===================================================================== */
+let currentPath = null;
+function parseRoute() {
+  const h = location.hash || "#/";
+  const raw = h.slice(1);
+  const [pathPart, queryPart] = raw.split("?");
+  let path = pathPart || "/";
+  if (!path.startsWith("/")) path = "/" + path;
+  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  const params = new URLSearchParams(queryPart || location.search);
+  return { path, params };
+}
+
+function route() {
+  const { path, params } = parseRoute();
+  const known = ["/", "/capabilities", "/notice"];
+  const target = known.includes(path) ? path : "404";
+  $$(".view").forEach(v => v.classList.toggle("active", v.dataset.view === target));
+  $$(".nav a").forEach(a => a.classList.toggle("active", a.dataset.route === path));
+  const changed = currentPath !== path;
+  currentPath = path;
+
+  if (path === "/capabilities") {
+    const q = params.get("q");
+    if (q !== null && q !== searchEl.value) searchEl.value = q;
+    renderRegistry();
+  }
+  if (path === "/") { playBoot(); playTuiMenu(); }
+  toTop.classList.remove("show");
+  if (changed) window.scrollTo(0, 0);
+  document.title = {
+    "/": "MAELSTRÖM v6.1 — Téléchargeur universel",
+    "/capabilities": "Sites compatibles — MAELSTRÖM",
+    "/notice": "Notice — MAELSTRÖM",
+    "404": "Page introuvable — MAELSTRÖM"
+  }[target];
+}
+window.addEventListener("hashchange", route);
+route();
+
+/* Pop-up de bienvenue : une seule fois, sur toutes les pages (y compris la notice) */
+if (shouldWelcome()) setTimeout(() => openModal("welcome", { sound: null }), REDUCED ? 0 : 450);
+
+})();
+</script>
+</body>
+</html>
