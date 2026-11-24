@@ -388,6 +388,13 @@ details .ans{padding:0 18px 16px;color:var(--muted);font-size:14px}
 .site-footer{border-top:1px solid var(--line);padding:30px 0;margin-top:40px}
 .site-footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .site-footer small{color:var(--dim)}
+.foot-left{display:inline-flex;align-items:center;gap:14px;flex-wrap:wrap}
+.foot-gh{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);padding:6px 12px;border:1px solid var(--line-2);border-radius:8px;transition:color .18s,border-color .18s,background .18s}
+.foot-gh:hover{color:var(--amber);border-color:var(--amber);background:var(--acc-soft);text-decoration:none}
+.foot-gh svg{width:16px;height:16px;flex:none}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.card-top svg{margin-bottom:0}
+.lic{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line-2);border-radius:999px;padding:2px 9px}
 
 /* ---------- Modals ---------- */
 .modal{
@@ -642,7 +649,10 @@ details .ans{padding:0 18px 16px;color:var(--muted);font-size:14px}
      <p>Un fichier, un double-clic (ou une commande sous Linux) et c'est parti.</p>
    </div>
           <div class="card">
-     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+     <div class="card-top">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+       <span class="lic">Licence MIT</span>
+     </div>
      <h3>Open source</h3>
      <p>Le code est lisible par tous. Aucun compte, aucun abonnement.</p>
    </div>
@@ -756,7 +766,13 @@ details .ans{padding:0 18px 16px;color:var(--muted);font-size:14px}
 
 <footer class="site-footer">
   <div class="wrap">
-    <small>MAELSTRÖM v6.1 · projet open source</small>
+    <span class="foot-left">
+      <small>MAELSTRÖM</small>
+      <a class="foot-gh" href="https://github.com/nimproo0/Maelstrom" target="_blank" rel="noopener noreferrer" aria-label="MAELSTRÖM sur GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.100.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
+        GitHub
+      </a>
+    </span>
     <button class="btn btn-primary" type="button" data-open-chooser>TÉLÉCHARGER</button>
   </div>
 </footer>
@@ -832,9 +848,9 @@ details .ans{padding:0 18px 16px;color:var(--muted);font-size:14px}
       </div>
       <p class="hint" style="margin-top:10px">Bon à savoir : même avec un certificat, SmartScreen peut afficher un avertissement tant qu'un fichier est récent.</p>
 
-      <a class="gh-link" href="" data-github>
+      <a class="gh-link" href="https://github.com/nimproo0/Maelstrom" data-github>
  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
- Code source bientôt sur GitHub
+ Code source sur GitHub
       </a>
 
       <div class="ai-box">
@@ -869,9 +885,9 @@ details .ans{padding:0 18px 16px;color:var(--muted);font-size:14px}
           <div class="codeblock inline"><pre id="lCmd2">./maelstrom.sh</pre><button class="copy" type="button" data-copy="lCmd2">COPIER</button></div></li>
       </ol>
 
-      <a class="gh-link" href="" data-github>
+      <a class="gh-link" href="https://github.com/nimproo0/Maelstrom" data-github>
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
-        Code source bientôt sur GitHub
+        Code source sur GitHub
       </a>
 
       <div class="ai-box">
@@ -919,7 +935,8 @@ const SOUNDS = {
   mac:      { file: "mac.mp3",           volume: 0.35 }, // survol / clic macOS
   validate: { file: "validate.wav",      volume: 0.45 }, // clic Windows / Linux
   warn:     { file: "avertissement.mp3", volume: 0.45 }, // apparition du disclaimer
-  copy:     { file: "prompt.mp3", volume: 0.40 }  // bouton COPIER
+  copy:     { file: "prompt.mp3", volume: 0.40 }, // bouton COPIER
+  faq:      { file: "whoush.wav",        volume: 0.30 }  // ouverture d'une question (FAQ)
 };
 const HOVER_TICK_VOLUME = 0.025;   // petit "tick" synthétisé au survol (0 = désactivé)
 const HOVER_TICK_SELECTOR = "a, button, .btn, .card, .chip, summary";
@@ -1205,7 +1222,13 @@ async function startDownload(os) {
   }, DISCLAIMER_DELAY);
 }
 
-/* ---------- Lien GitHub (vide pour l'instant) ---------- */
+/* ---------- FAQ : whoosh à l'ouverture d'une question ---------- */
+document.addEventListener("toggle", (e) => {
+  const d = e.target;
+  if (d && d.tagName === "DETAILS" && d.open) play("faq");
+}, true);
+
+/* ---------- Lien GitHub ---------- */
 document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-github]");
   if (!a) return;
